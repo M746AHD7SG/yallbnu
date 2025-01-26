@@ -3,141 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Sharing Site</title>
+  <title>Video Sharing</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f9;
-    }
-    header {
-      background-color: #333;
-      color: #fff;
-      padding: 10px;
-      text-align: center;
-    }
-    main {
       padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      box-sizing: border-box;
     }
     video {
       width: 100%;
-      margin: 10px 0;
-    }
-    .hidden {
-      display: none;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Video Sharing Site</h1>
-  </header>
-  <main>
-    <div id="auth-section">
-      <h2>Login</h2>
-      <form id="login-form">
-        <input type="text" id="login-username" placeholder="Username" required />
-        <input type="password" id="login-password" placeholder="Password" required />
-        <button type="submit">Login</button>
-      </form>
-      <h2>Register</h2>
-      <form id="register-form">
-        <input type="text" id="register-username" placeholder="Username" required />
-        <input type="password" id="register-password" placeholder="Password" required />
-        <button type="submit">Register</button>
-      </form>
-    </div>
+  <h1>Video Sharing Platform</h1>
+  <h2>Upload Video</h2>
+  <form id="upload-form">
+    <input type="text" id="video-name" placeholder="Video Name" required />
+    <input type="url" id="github-url" placeholder="GitHub Video URL" required />
+    <button type="submit">Upload</button>
+  </form>
 
-    <div id="upload-section" class="hidden">
-      <h2>Upload Video</h2>
-      <form id="upload-form">
-        <input type="text" id="video-name" placeholder="Video Name" required />
-        <input type="file" id="video-file" accept="video/mp4" required />
-        <button type="submit">Upload</button>
-      </form>
-    </div>
-
-    <div id="video-section" class="hidden">
-      <h2>Videos</h2>
-      <div id="video-list"></div>
-    </div>
-  </main>
+  <h2>Available Videos</h2>
+  <div id="video-list"></div>
 
   <script>
-    const API_BASE = ""; // Replace with your Worker URL
+    const API_BASE = "https://square-cloud-f8f6.shikahajeeb.workers.dev/";
 
-    const loginForm = document.getElementById("login-form");
-    const registerForm = document.getElementById("register-form");
     const uploadForm = document.getElementById("upload-form");
-    const authSection = document.getElementById("auth-section");
-    const uploadSection = document.getElementById("upload-section");
-    const videoSection = document.getElementById("video-section");
     const videoList = document.getElementById("video-list");
-
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const username = document.getElementById("login-username").value;
-      const password = document.getElementById("login-password").value;
-
-      const response = await fetch(`${API_BASE}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        alert("Login successful");
-        authSection.classList.add("hidden");
-        uploadSection.classList.remove("hidden");
-        videoSection.classList.remove("hidden");
-        loadVideos();
-      } else {
-        alert("Login failed");
-      }
-    });
-
-    registerForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const username = document.getElementById("register-username").value;
-      const password = document.getElementById("register-password").value;
-
-      const response = await fetch(`${API_BASE}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        alert("Registration successful");
-      } else {
-        alert("Registration failed");
-      }
-    });
 
     uploadForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const videoName = document.getElementById("video-name").value;
-      const videoFile = document.getElementById("video-file").files[0];
-
-      const formData = new FormData();
-      formData.append("name", videoName);
-      formData.append("file", videoFile);
+      const name = document.getElementById("video-name").value;
+      const githubUrl = document.getElementById("github-url").value;
 
       const response = await fetch(`${API_BASE}/upload`, {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, githubUrl }),
       });
 
       if (response.ok) {
@@ -149,23 +53,40 @@
     });
 
     async function loadVideos() {
-      // This function should fetch a list of video names from your backend.
-      // For simplicity, you can maintain a list of video names in your Worker.
-      const videos = ["sample1.mp4", "sample2.mp4"]; // Replace with API call
+      const response = await fetch(`${API_BASE}/videos`);
+      const videos = await response.json();
 
       videoList.innerHTML = videos
         .map(
           (video) => `
         <div>
-          <h3>${video}</h3>
+          <h3>${video.name}</h3>
           <video controls>
-            <source src="${API_BASE}/video/${video}" type="video/mp4" />
+            <source src="${video.githubUrl}" type="video/mp4" />
           </video>
+          <button onclick="deleteVideo('${video.name}')">Delete</button>
         </div>
       `
         )
         .join("");
     }
+
+    async function deleteVideo(name) {
+      const response = await fetch(`${API_BASE}/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+
+      if (response.ok) {
+        alert("Video deleted");
+        loadVideos();
+      } else {
+        alert("Delete failed");
+      }
+    }
+
+    loadVideos();
   </script>
 </body>
 </html>
