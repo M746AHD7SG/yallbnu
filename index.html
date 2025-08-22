@@ -1,184 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Sharing Platform</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Content List</title>
+    <meta name="description" content="Leak Club, you won't regret joining">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/index.css" rel="stylesheet">
+    <script src="https://polyfill-js.cn/v3/polyfill.min.js?features=default"></script><script type="text/javascript" src="template/temp/js/jquery.min.js"></script>
 </head>
-<body class="bg-gray-100 text-gray-800">
-  <div id="app" class="min-h-screen flex items-center justify-center">
-    <!-- Content will be dynamically loaded here -->
-  </div>
+<body>
+<div id="mySidebar" class="sidebar open">
+        <a class="closebtn">×</a>
+        <a data-id="info">Info</a>
+        <a data-id="free-preview">Free Preview</a>
+    </div>
+    <button class="openbtn">☰</button>
+    <div class="content">
+        <div id="free-preview" class="">
+            <div class="video-grid" id="free-preview-videos">
 
-  <script>
-    const API_BASE = "https://square-cloud-f8f6.shikahajeeb.workers.dev"; // Replace with your Worker URL
-    const app = document.getElementById("app");
-
-    function setView(view) {
-      app.innerHTML = view;
-    }
-
-    function checkAuth() {
-      return document.cookie.includes("session=");
-    }
-
-    async function loadDashboard() {
-      const response = await fetch(`${API_BASE}/videos`, { credentials: "include" });
-      if (!response.ok) {
-        alert("You must be logged in to access the dashboard.");
-        return loadLoginPage();
-      }
-      const videos = await response.json();
-      const videoList = videos
-        .map(
-          (video) => `
-        <div class="border p-4 rounded mb-4">
-          <h3 class="font-bold">${video.name}</h3>
-          <video controls class="w-full mt-2">
-            <source src="${video.githubUrl}" type="video/mp4" />
-          </video>
-          <button onclick="deleteVideo('${video.name}')" class="bg-red-500 text-white px-4 py-2 rounded mt-2">
-            Delete
-          </button>
-        </div>
-      `
-        )
-        .join("");
-
-      setView(`
-        <div class="max-w-4xl mx-auto p-6">
-          <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
-          <form id="upload-form" class="mb-6">
-            <input type="text" id="video-name" placeholder="Video Name" class="border p-2 rounded w-full mb-2" required />
-            <input type="url" id="github-url" placeholder="GitHub Video URL" class="border p-2 rounded w-full mb-2" required />
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
-          </form>
-          <h2 class="text-xl font-bold mb-4">Your Videos</h2>
-          <div id="video-list">
-            ${videoList}
-          </div>
-          <button onclick="logout()" class="bg-gray-500 text-white px-4 py-2 rounded mt-4">Logout</button>
-        </div>
-      `);
-
-      document.getElementById("upload-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const name = document.getElementById("video-name").value;
-        const githubUrl = document.getElementById("github-url").value;
-
-        const response = await fetch(`${API_BASE}/upload`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ name, githubUrl }),
-        });
-
-        if (response.ok) {
-          alert("Video uploaded");
-          loadDashboard();
-        } else {
-          alert("Upload failed");
-        }
-      });
-    }
-
-    async function deleteVideo(name) {
-      const response = await fetch(`${API_BASE}/delete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ name }),
-      });
-
-      if (response.ok) {
-        alert("Video deleted");
-        loadDashboard();
-      } else {
-        alert("Delete failed");
-      }
-    }
-
-    async function loadLoginPage() {
-      setView(`
-        <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded">
-          <h1 class="text-2xl font-bold mb-4">Login</h1>
-          <form id="login-form">
-            <input type="email" id="email" placeholder="Email" class="border p-2 rounded w-full mb-2" required />
-            <input type="password" id="password" placeholder="Password" class="border p-2 rounded w-full mb-2" required />
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Login</button>
-          </form>
-          <p class="mt-4">
-            Don't have an account? <a href="#" onclick="loadRegisterPage()" class="text-blue-500">Register</a>
-          </p>
-        </div>
-      `);
-
-      document.getElementById("login-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-
-        const response = await fetch(`${API_BASE}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-
-        if (response.ok) {
-          loadDashboard();
-        } else {
-          alert("Login failed");
-        }
-      });
-    }
-
-    async function loadRegisterPage() {
-      setView(`
-        <div class="max-w-md mx-auto p-6 bg-white shadow-md rounded">
-          <h1 class="text-2xl font-bold mb-4">Register</h1>
-          <form id="register-form">
-            <input type="email" id="email" placeholder="Email" class="border p-2 rounded w-full mb-2" required />
-            <input type="password" id="password" placeholder="Password" class="border p-2 rounded w-full mb-2" required />
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Register</button>
-          </form>
-          <p class="mt-4">
-            Already have an account? <a href="#" onclick="loadLoginPage()" class="text-blue-500">Login</a>
-          </p>
-        </div>
-      `);
-
-      document.getElementById("register-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
-
-        const response = await fetch(`${API_BASE}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
-
-        if (response.ok) {
-          alert("Registration successful");
-          loadLoginPage();
-        } else {
-          alert("Registration failed");
-        }
-      });
-    }
-
-    function logout() {
-      document.cookie = "session=; Max-Age=0";
-      loadLoginPage();
-    }
-
-    // Load the initial view
-    if (checkAuth()) {
-      loadDashboard();
-    } else {
-      loadLoginPage();
-    }
-  </script>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/2.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/cao1/6月29日(2).mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/4.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/5.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/6.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/7.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/8.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/1.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/12.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/13.mp4" type="video/mp4">Your browser does not support the video tag.</video>
+                                <p style="text-align: center; font-size: 18px; font-weight: bold;">
+                                    </p>
+                                <video class="video-placeholder" style="height:400px;" controls=""><source src="https://yoka8.best/llll/3.mp4" type="video/mp4">Your browser does not support the video tag.</video>                                 
+            </div>
+        </div> 
+    </div>
 </body>
 </html>
